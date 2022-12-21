@@ -51,6 +51,7 @@ function sendEmailBooking(booking){
       });
 }
 
+//verify JWT
 function verifyJWT(req, res, next) {
     // console.log('token', req.headers.authorization)
     const authHeader = req.headers.authorization;
@@ -129,6 +130,7 @@ async function run() {
         const bookings = await bookingsCollection.find(query).toArray();
         res.send(bookings)
     })
+
     //prayment single specific id
     app.get('/bookings/:id', async(req, res) => {
         const id = req.params.id;
@@ -173,6 +175,7 @@ async function run() {
             clientSecret: paymentIntent.client_secret,
           });
      })
+
      //store payment database
      app.post('/payments', async(req, res) => {
         const payment = req.body;
@@ -189,7 +192,6 @@ async function run() {
         res.send(result);
      })
 
-
      //jwt token access
      app.get('/jwt', async(req, res) => {
         const email = req.query.email;
@@ -201,7 +203,8 @@ async function run() {
         }
         res.status(403).send({accessToken: ''})
      })
-     //all user get
+
+     //all users gets
      app.get('/users', async(req, res) => {
         const query = {};
         const users = await usersCollection.find(query).toArray();
@@ -234,8 +237,9 @@ async function run() {
             }
         }
         const result = await usersCollection.updateOne(filter, updatedDoc, options);
-        res.send(result)
+        res.send(result);
      })
+
 
     // temporary to update price field on appointment options
         // app.put('/addPrice', async (req, res) => {
@@ -250,12 +254,14 @@ async function run() {
         //     res.send(result);
         // })
 
+
      //doctr collect get
      app.get('/doctors', verifyJWT, verifyAdmin, async(req, res) => {
         const query = {};
         const doctors = await doctorsCollection.find(query).toArray();
         res.send(doctors)
      })
+
      //doctor collection
      app.post('/doctors', verifyJWT, verifyAdmin, async(req, res) => {
         const doctor = req.body;
@@ -278,18 +284,6 @@ async function run() {
     }
 }
 run();
-
-
-
-/*
- * naming convention
- * Booking / orders / users
- *app.get('/bookins')
- *app.get('/bookins/:id')
- *app.post('/bookins')
- *app.put('/bookins/:id')
- *app.delete('/bookins/:id')
- */
 
 
 app.get('/', (req, res) => {
