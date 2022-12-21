@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000
 require('dotenv').config();
+const nodemailer = require("nodemailer");
+const mg = require('nodemailer-mailgun-transport');
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
 require('colors');
 
@@ -15,6 +17,39 @@ app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.0mxdn2v.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+//send email function
+function sendEmailBooking(booking){
+    const {email, appointmentDate, treatment, slot} = booking;
+    const auth = {
+        auth: {
+          api_key: process.env.EMAIL_SEND_KEY,
+          domain: process.env.EMAIL_SEND_DOMAIN
+        }
+      }
+      const transporter = nodemailer.createTransport(mg(auth));
+
+     transporter.sendMail({
+        from: "SENDER_EMAIL", // verified sender email
+        to: email, // recipient email
+        subject: `your Appoinments for is ${treatment} confirmed`, // Subject line
+        text: "Hello world!", // plain text body
+        html: `
+        <h2>Your Appointment is confirm ${treatment}</h2> 
+        <div>
+            <p>Please Visit Us form ${appointmentDate} a slot ${slot}</p>
+            <p>thenks for doctors portal</p>
+        </div>
+        
+        `, // html body
+      }, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
+}
 
 function verifyJWT(req, res, next) {
     // console.log('token', req.headers.authorization)
@@ -116,6 +151,8 @@ async function run() {
             return res.send({acknowledged: false, message})
         }
         const result = await bookingsCollection.insertOne(booking);
+        //send email users
+
         res.send(result);
      })
 
